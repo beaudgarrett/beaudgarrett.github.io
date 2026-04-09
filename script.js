@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    beaugarrett.dev — Parallax Engine + Particles + Reveals
+   + Constellation Name + Typewriter
    ═══════════════════════════════════════════════════════ */
 
 (function () {
@@ -34,9 +35,226 @@
     }
   }
 
+  /* ─── Constellation Name System ─── */
+  var nameStars = [];
+  var nameLines = [];
+  var constellationPhase = 'waiting'; // waiting -> animating -> formed
+  var constellationStartTime = 0;
+  var CONSTELLATION_DELAY = 3000;
+  var CONSTELLATION_ANIM_DURATION = 2500;
+  var constellationReady = false;
+  var constellationAlpha = 0;
+
+  function buildNameConstellation() {
+    var heroTitle = document.getElementById('heroTitle');
+    if (!heroTitle) return;
+
+    var rect = heroTitle.getBoundingClientRect();
+    // Use the hero title position to place our constellation
+    var centerX = rect.left + rect.width / 2;
+    var centerY = rect.top + rect.height / 2;
+    var textWidth = rect.width;
+    var textHeight = rect.height;
+
+    // Create offscreen canvas to sample text shape
+    var offCanvas = document.createElement('canvas');
+    var offCtx = offCanvas.getContext('2d');
+    var ow = 600;
+    var oh = 200;
+    offCanvas.width = ow;
+    offCanvas.height = oh;
+
+    offCtx.fillStyle = 'white';
+    offCtx.font = 'bold 72px Inter, system-ui, sans-serif';
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.fillText('BEAU', ow / 2, oh * 0.35);
+    offCtx.fillText('GARRETT', ow / 2, oh * 0.72);
+
+    var imageData = offCtx.getImageData(0, 0, ow, oh);
+    var textPoints = [];
+    var step = 4;
+    for (var py = 0; py < oh; py += step) {
+      for (var px = 0; px < ow; px += step) {
+        var idx = (py * ow + px) * 4;
+        if (imageData.data[idx + 3] > 128) {
+          textPoints.push({ x: px, y: py });
+        }
+      }
+    }
+
+    // Sample ~130 star positions from the text
+    var numStars = Math.min(130, textPoints.length);
+    var shuffled = textPoints.slice();
+    for (var si = shuffled.length - 1; si > 0; si--) {
+      var sj = Math.floor(Math.random() * (si + 1));
+      var tmp = shuffled[si];
+      shuffled[si] = shuffled[sj];
+      shuffled[sj] = tmp;
+    }
+    shuffled = shuffled.slice(0, numStars);
+
+    nameStars = [];
+    for (var ni = 0; ni < shuffled.length; ni++) {
+      var pt = shuffled[ni];
+      // Map offscreen coords to viewport coords centered on hero title
+      var tx = centerX + (pt.x / ow - 0.5) * textWidth * 1.1;
+      var ty = centerY + (pt.y / oh - 0.5) * textHeight * 1.15;
+
+      nameStars.push({
+        // Start scattered randomly across viewport
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        // Target position (viewport coords)
+        targetX: tx,
+        targetY: ty,
+        r: Math.random() * 1.2 + 0.6,
+        pulse: Math.random() * Math.PI * 2,
+        pulseSpeed: Math.random() * 0.015 + 0.008,
+        progress: 0,
+      });
+    }
+
+    // Pre-compute constellation lines between nearby target positions
+    nameLines = [];
+    var maxLineDist = 28;
+    for (var li = 0; li < nameStars.length; li++) {
+      for (var lj = li + 1; lj < nameStars.length; lj++) {
+        var dx = nameStars[li].targetX - nameStars[lj].targetX;
+        var dy = nameStars[li].targetY - nameStars[lj].targetY;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < maxLineDist) {
+          nameLines.push({ a: li, b: lj, dist: dist });
+        }
+      }
+    }
+
+    constellationReady = true;
+    constellationStartTime = performance.now();
+  }
+
+  // Build constellation after fonts load and 100ms settle
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () {
+      setTimeout(buildNameConstellation, 100);
+    });
+  } else {
+    setTimeout(buildNameConstellation, 500);
+  }
+
+  function drawConstellationName(now) {
+    if (!constellationReady || nameStars.length === 0) return;
+
+    var elapsed = now - constellationStartTime;
+
+    if (constellationPhase === 'waiting') {
+      if (elapsed >= CONSTELLATION_DELAY) {
+        constellationPhase = 'animating';
+      } else {
+        // Draw stars at scattered positions (subtle)
+        for (var wi = 0; wi < nameStars.length; wi++) {
+          var ws = nameStars[wi];
+          ws.pulse += ws.pulseSpeed;
+          var wa = 0.15 + 0.1 * Math.sin(ws.pulse);
+          ctx.beginPath();
+          ctx.arc(ws.x, ws.y, ws.r * 0.7, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(167, 139, 250, ' + wa + ')';
+          ctx.fill();
+        }
+        return;
+      }
+    }
+
+    var animElapsed = elapsed - CONSTELLATION_DELAY;
+    var t = Math.min(animElapsed / CONSTELLATION_ANIM_DURATION, 1);
+    // Ease out cubic
+    var eased = 1 - Math.pow(1 - t, 3);
+
+    // Fade in scroll-adjusted alpha (fade out when scrolled)
+    var scrollFade = Math.max(0, 1 - scrollY / 400);
+    constellationAlpha = eased * scrollFade;
+
+    if (constellationAlpha <= 0.01) return;
+
+    // Update and draw stars
+    for (var ai = 0; ai < nameStars.length; ai++) {
+      var s = nameStars[ai];
+      s.pulse += s.pulseSpeed;
+
+      // Interpolate position
+      var cx = s.x + (s.targetX - s.x) * eased;
+      var cy = s.y + (s.targetY - s.y) * eased;
+
+      // After formed, add subtle shimmer movement
+      var shimmerX = 0;
+      var shimmerY = 0;
+      if (t >= 1) {
+        shimmerX = Math.sin(s.pulse * 1.5) * 0.8;
+        shimmerY = Math.cos(s.pulse * 1.2) * 0.5;
+      }
+
+      var drawX = cx + shimmerX;
+      var drawY = cy + shimmerY;
+
+      s._drawX = drawX;
+      s._drawY = drawY;
+
+      var starAlpha = constellationAlpha * (0.7 + 0.3 * Math.sin(s.pulse));
+
+      // Outer glow
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, s.r * 4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(167, 139, 250, ' + (starAlpha * 0.08) + ')';
+      ctx.fill();
+
+      // Core star
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, s.r + 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(248, 250, 252, ' + starAlpha + ')';
+      ctx.fill();
+
+      // Gold tint
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, s.r * 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(251, 191, 36, ' + (starAlpha * 0.12) + ')';
+      ctx.fill();
+    }
+
+    // Draw connecting lines (fade in as animation progresses)
+    var lineAlphaBase = Math.max(0, (eased - 0.3) / 0.7) * constellationAlpha;
+    if (lineAlphaBase > 0.01) {
+      for (var li = 0; li < nameLines.length; li++) {
+        var line = nameLines[li];
+        var sa = nameStars[line.a];
+        var sb = nameStars[line.b];
+        var la = lineAlphaBase * (1 - line.dist / 28) * 0.35;
+
+        // Line draw-in effect: stagger based on line index
+        var lineDelay = (li / nameLines.length) * 0.4;
+        var lineProgress = Math.max(0, Math.min(1, (eased - 0.3 - lineDelay) / 0.3));
+        la *= lineProgress;
+
+        if (la > 0.005) {
+          ctx.beginPath();
+          ctx.moveTo(sa._drawX, sa._drawY);
+          ctx.lineTo(sb._drawX, sb._drawY);
+          ctx.strokeStyle = 'rgba(167, 139, 250, ' + la + ')';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+
+    if (t >= 1 && constellationPhase !== 'formed') {
+      constellationPhase = 'formed';
+    }
+  }
+
+  /* ─── End Constellation Name System ─── */
+
   function drawParticles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const offset = scrollY * 0.3;
+    var offset = scrollY * 0.3;
 
     for (const p of particles) {
       p.pulse += p.pulseSpeed;
@@ -47,16 +265,19 @@
 
       ctx.beginPath();
       ctx.arc(p.x + Math.sin(p.pulse * 0.5) * p.drift * 20, drawY, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(167, 139, 250, ${a})`;
+      ctx.fillStyle = 'rgba(167, 139, 250, ' + a + ')';
       ctx.fill();
 
       if (p.r > 1.2) {
         ctx.beginPath();
         ctx.arc(p.x, drawY, p.r * 3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(139, 92, 246, ${a * 0.15})`;
+        ctx.fillStyle = 'rgba(139, 92, 246, ' + (a * 0.15) + ')';
         ctx.fill();
       }
     }
+
+    /* ─── Draw Constellation Name ─── */
+    drawConstellationName(performance.now());
 
     /* ─── Draw Constellation Cursor (enhanced) ─── */
     if (mouseX > 0 && mouseY > 0) {
@@ -265,6 +486,17 @@
     resizeTimer = setTimeout(function () {
       resizeCanvas();
       createParticles();
+      // Rebuild constellation for new viewport size
+      constellationReady = false;
+      constellationPhase = 'formed';
+      buildNameConstellation();
+      // Skip animation on resize — snap to formed
+      constellationPhase = 'formed';
+      constellationStartTime = performance.now() - CONSTELLATION_DELAY - CONSTELLATION_ANIM_DURATION - 100;
+      for (var ri2 = 0; ri2 < nameStars.length; ri2++) {
+        nameStars[ri2].x = nameStars[ri2].targetX;
+        nameStars[ri2].y = nameStars[ri2].targetY;
+      }
     }, 200);
   });
 
@@ -295,7 +527,7 @@
       const speed = parseFloat(layer.dataset.speed) || 0.5;
       const rect = layer.parentElement.getBoundingClientRect();
       const offset = rect.top * speed * -0.5;
-      layer.style.transform = `translateY(${offset}px)`;
+      layer.style.transform = 'translateY(' + offset + 'px)';
     }
   }
 
@@ -382,4 +614,63 @@
   sections.forEach(function (section) {
     sectionObserver.observe(section);
   });
+
+  /* ─── Typewriter Animation for CelestiML ─── */
+  var featuredTitle = document.getElementById('featuredTitle');
+  var typewriterStarted = false;
+
+  if (featuredTitle) {
+    var targetText = featuredTitle.getAttribute('data-text') || 'CelestiML';
+    featuredTitle.textContent = '';
+
+    var typewriterObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting && !typewriterStarted) {
+            typewriterStarted = true;
+            typewriterObserver.unobserve(entry.target);
+            startTypewriter(featuredTitle, targetText);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    typewriterObserver.observe(featuredTitle);
+  }
+
+  function startTypewriter(element, text) {
+    var cursor = document.createElement('span');
+    cursor.className = 'typewriter-cursor';
+    cursor.textContent = '';
+    element.appendChild(cursor);
+
+    var charIndex = 0;
+    var textNode = document.createTextNode('');
+    element.insertBefore(textNode, cursor);
+
+    function typeNextChar() {
+      if (charIndex < text.length) {
+        textNode.textContent += text[charIndex];
+        charIndex++;
+        // Slightly varied timing for natural feel
+        var delay = 80 + Math.random() * 80;
+        // Pause slightly longer after spaces
+        if (text[charIndex - 1] === ' ') delay += 60;
+        setTimeout(typeNextChar, delay);
+      } else {
+        // Typing done — fade cursor
+        setTimeout(function () {
+          cursor.classList.add('fade-out');
+          setTimeout(function () {
+            cursor.remove();
+          }, 600);
+        }, 1200);
+      }
+    }
+
+    // Start after a short delay
+    setTimeout(typeNextChar, 300);
+  }
+
 })();

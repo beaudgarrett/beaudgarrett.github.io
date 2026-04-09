@@ -50,7 +50,7 @@
     <div class="hero-content reveal">
       <div class="hero-text">
         <p class="hero-eyebrow">AI Developer &bull; ML Research &bull; Systems Builder</p>
-        <h1 class="hero-title">Beau<br>Garrett</h1>
+        <h1 class="hero-title" id="heroTitle" aria-label="Beau Garrett">Beau<br>Garrett</h1>
         <p class="hero-subtitle">I build intelligent tools, applied machine learning projects, and interactive systems that turn ideas into measurable results.</p>
         <div class="hero-buttons">
           <a href="#projects" class="btn btn-primary">View Projects</a>
@@ -79,7 +79,7 @@
     <div class="container">
       <div class="featured-card glass reveal">
         <div class="featured-badge">Featured Project</div>
-        <h2 class="featured-title">CelestiML</h2>
+        <h2 class="featured-title" id="featuredTitle" data-text="CelestiML"></h2>
         <p class="featured-tagline">Neural Celestial Alignment Explorer</p>
         <p class="featured-desc">An interactive 3D astronomy platform that visualizes planetary positions for any date, compares ML predictions vs real celestial data, and scores the rarity of planetary alignments.</p>
         <div class="tag-row">
@@ -89,9 +89,8 @@
           <span class="tag">Research</span>
         </div>
         <div class="featured-buttons">
-          <a href="#" class="btn btn-primary">Live Demo</a>
           <a href="celestiml_research.html" class="btn btn-outline">Read Research</a>
-          <a href="https://github.com/beaudgarrett" target="_blank" rel="noopener" class="btn btn-outline">View Code</a>
+          <a href="https://github.com/beaudgarrett/celestiml" target="_blank" rel="noopener" class="btn btn-outline">View Code</a>
         </div>
       </div>
     </div>
@@ -117,20 +116,26 @@
             <span class="tag tag-sm">ML</span>
             <span class="tag tag-sm">Three.js</span>
           </div>
-          <a href="https://github.com/beaudgarrett" target="_blank" rel="noopener" class="project-link">View Project &rarr;</a>
+          <a href="https://github.com/beaudgarrett/celestiml" target="_blank" rel="noopener" class="project-link">View Project &rarr;</a>
         </div>
 
-        <!-- AgentBoost -->
-        <div class="project-card glass reveal" data-delay="100">
-          <div class="project-icon">&#129302;</div>
-          <h3>AgentBoost</h3>
-          <p>AI coding-agent enhancement system that improves performance via structured prompting, tool orchestration, retry systems, and benchmark evaluation.</p>
-          <div class="tag-row">
-            <span class="tag tag-sm">AI</span>
-            <span class="tag tag-sm">Agents</span>
-            <span class="tag tag-sm">Benchmarking</span>
+        <!-- gAIn -->
+        <div class="project-card glass project-card--echo reveal" data-delay="100">
+          <a href="https://github.com/beaudgarrett/gAIn" target="_blank" rel="noopener" class="echo-image-link">
+            <img src="gAInIMAGE.png" alt="gAIn — Hypertrophy ML System" class="echo-image" loading="lazy">
+            <div class="echo-overlay">
+              <span>View on GitHub &rarr;</span>
+            </div>
+          </a>
+          <div class="project-card-body">
+            <h3>gAIn</h3>
+            <p>Machine learning tool that predicts muscle growth potential from volume, frequency, intensity, and recovery data.</p>
+            <div class="tag-row">
+              <span class="tag tag-sm">ML</span>
+              <span class="tag tag-sm">Health</span>
+              <span class="tag tag-sm">Prediction</span>
+            </div>
           </div>
-          <span class="project-link" style="color: var(--accent); cursor: default;">Under Development</span>
         </div>
 
         <!-- Echo Runner -->
@@ -152,23 +157,17 @@
           </div>
         </div>
 
-        <!-- gAIn -->
-        <div class="project-card glass project-card--echo reveal" data-delay="300">
-          <a href="https://github.com/beaudgarrett/gAIn" target="_blank" rel="noopener" class="echo-image-link">
-            <img src="gAInIMAGE.png" alt="gAIn — Hypertrophy ML System" class="echo-image" loading="lazy">
-            <div class="echo-overlay">
-              <span>View on GitHub &rarr;</span>
-            </div>
-          </a>
-          <div class="project-card-body">
-            <h3>gAIn</h3>
-            <p>Machine learning tool that predicts muscle growth potential from volume, frequency, intensity, and recovery data.</p>
-            <div class="tag-row">
-              <span class="tag tag-sm">ML</span>
-              <span class="tag tag-sm">Health</span>
-              <span class="tag tag-sm">Prediction</span>
-            </div>
+        <!-- AgentBoost -->
+        <div class="project-card glass reveal" data-delay="300">
+          <div class="project-icon">&#129302;</div>
+          <h3>AgentBoost</h3>
+          <p>AI coding-agent enhancement system that improves performance via structured prompting, tool orchestration, retry systems, and benchmark evaluation.</p>
+          <div class="tag-row">
+            <span class="tag tag-sm">AI</span>
+            <span class="tag tag-sm">Agents</span>
+            <span class="tag tag-sm">Benchmarking</span>
           </div>
+          <span class="project-link" style="color: var(--accent); cursor: default;">Under Development</span>
         </div>
 
       </div>
