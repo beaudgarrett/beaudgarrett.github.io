@@ -108,8 +108,8 @@
     for (var ni = 0; ni < shuffled.length; ni++) {
       var pt = shuffled[ni];
       // Map text pixel bounding box directly onto the h1 element rect
-      var tx = rect.left - 60 + ((pt.x - minPx) / pxW) * rect.width;
-      var ty = rect.top + ((pt.y - minPy) / pxH) * rect.height;
+      var tx = rect.left - 60 + ((pt.x - minPx) / pxW) * rect.width * 0.8;
+      var ty = rect.top + ((pt.y - minPy) / pxH) * rect.height * 0.85;
 
       nameStars.push({
         // Start scattered randomly across viewport
