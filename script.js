@@ -65,10 +65,10 @@
 
     offCtx.fillStyle = 'white';
     offCtx.font = 'bold 72px Inter, system-ui, sans-serif';
-    offCtx.textAlign = 'center';
-    offCtx.textBaseline = 'middle';
-    offCtx.fillText('BEAU', ow / 2, oh * 0.35);
-    offCtx.fillText('GARRETT', ow / 2, oh * 0.72);
+    offCtx.textAlign = 'left';
+    offCtx.textBaseline = 'top';
+    offCtx.fillText('BEAU', 10, 10);
+    offCtx.fillText('GARRETT', 10, 100);
 
     var imageData = offCtx.getImageData(0, 0, ow, oh);
     var textPoints = [];
