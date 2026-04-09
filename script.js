@@ -38,12 +38,16 @@
   /* ─── Constellation Name System ─── */
   var nameStars = [];
   var nameLines = [];
-  var constellationPhase = 'waiting'; // waiting -> animating -> formed
+  var constellationPhase = 'waiting'; // waiting -> animating -> formed -> fading -> text
   var constellationStartTime = 0;
-  var CONSTELLATION_DELAY = 3000;
+  var CONSTELLATION_DELAY = 2000;
   var CONSTELLATION_ANIM_DURATION = 2500;
+  var CONSTELLATION_HOLD = 1500; // hold constellation before transitioning to text
+  var CONSTELLATION_FADE = 800;  // fade constellation out while text fades in
   var constellationReady = false;
   var constellationAlpha = 0;
+  var constellationFormedTime = 0;
+  var constellationFadeStart = 0;
 
   function buildNameConstellation() {
     var heroTitle = document.getElementById('heroTitle');
@@ -245,8 +249,35 @@
       }
     }
 
-    if (t >= 1 && constellationPhase !== 'formed') {
+    if (t >= 1 && constellationPhase === 'animating') {
       constellationPhase = 'formed';
+      constellationFormedTime = performance.now();
+    }
+
+    // After holding, fade constellation out and show the real h1 text
+    if (constellationPhase === 'formed') {
+      var holdElapsed = now - constellationFormedTime;
+      if (holdElapsed >= CONSTELLATION_HOLD) {
+        constellationPhase = 'fading';
+        constellationFadeStart = performance.now();
+      }
+    }
+
+    if (constellationPhase === 'fading') {
+      var fadeElapsed = now - constellationFadeStart;
+      var fadeT = Math.min(fadeElapsed / CONSTELLATION_FADE, 1);
+      constellationAlpha = (1 - fadeT) * scrollFade;
+
+      // Fade in the real h1 text
+      var heroTitle = document.getElementById('heroTitle');
+      if (heroTitle) {
+        heroTitle.style.opacity = fadeT;
+        heroTitle.style.visibility = 'visible';
+      }
+
+      if (fadeT >= 1) {
+        constellationPhase = 'text';
+      }
     }
   }
 
@@ -486,16 +517,24 @@
     resizeTimer = setTimeout(function () {
       resizeCanvas();
       createParticles();
-      // Rebuild constellation for new viewport size
-      constellationReady = false;
-      constellationPhase = 'formed';
-      buildNameConstellation();
-      // Skip animation on resize — snap to formed
-      constellationPhase = 'formed';
-      constellationStartTime = performance.now() - CONSTELLATION_DELAY - CONSTELLATION_ANIM_DURATION - 100;
-      for (var ri2 = 0; ri2 < nameStars.length; ri2++) {
-        nameStars[ri2].x = nameStars[ri2].targetX;
-        nameStars[ri2].y = nameStars[ri2].targetY;
+      // On resize, if constellation already transitioned to text, stay there
+      if (constellationPhase === 'text' || constellationPhase === 'fading') {
+        constellationPhase = 'text';
+        constellationReady = false;
+        var ht = document.getElementById('heroTitle');
+        if (ht) { ht.style.opacity = '1'; ht.style.visibility = 'visible'; }
+      } else {
+        // Rebuild constellation for new viewport size
+        constellationReady = false;
+        buildNameConstellation();
+        // Skip animation on resize — snap to formed
+        constellationPhase = 'formed';
+        constellationFormedTime = performance.now();
+        constellationStartTime = performance.now() - CONSTELLATION_DELAY - CONSTELLATION_ANIM_DURATION - 100;
+        for (var ri2 = 0; ri2 < nameStars.length; ri2++) {
+          nameStars[ri2].x = nameStars[ri2].targetX;
+          nameStars[ri2].y = nameStars[ri2].targetY;
+        }
       }
     }, 200);
   });
