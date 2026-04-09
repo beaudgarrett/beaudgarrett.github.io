@@ -184,6 +184,33 @@
     var scrollFade = Math.max(0, 1 - scrollY / 400);
     constellationAlpha = eased * scrollFade;
 
+    // Handle formed -> fading -> text transitions before drawing
+    if (t >= 1 && constellationPhase === 'animating') {
+      constellationPhase = 'formed';
+      constellationFormedTime = performance.now();
+    }
+    if (constellationPhase === 'formed') {
+      var holdElapsed = now - constellationFormedTime;
+      if (holdElapsed >= CONSTELLATION_HOLD) {
+        constellationPhase = 'fading';
+        constellationFadeStart = performance.now();
+      }
+    }
+    if (constellationPhase === 'fading') {
+      var fadeElapsed = now - constellationFadeStart;
+      var fadeT = Math.min(fadeElapsed / CONSTELLATION_FADE, 1);
+      constellationAlpha = (1 - fadeT) * scrollFade;
+      var heroTitleEl = document.getElementById('heroTitle');
+      if (heroTitleEl) {
+        heroTitleEl.style.opacity = fadeT;
+        heroTitleEl.style.visibility = 'visible';
+      }
+      if (fadeT >= 1) {
+        constellationPhase = 'text';
+      }
+    }
+    if (constellationPhase === 'text') return;
+
     if (constellationAlpha <= 0.01) return;
 
     // Update and draw stars
@@ -255,36 +282,6 @@
       }
     }
 
-    if (t >= 1 && constellationPhase === 'animating') {
-      constellationPhase = 'formed';
-      constellationFormedTime = performance.now();
-    }
-
-    // After holding, fade constellation out and show the real h1 text
-    if (constellationPhase === 'formed') {
-      var holdElapsed = now - constellationFormedTime;
-      if (holdElapsed >= CONSTELLATION_HOLD) {
-        constellationPhase = 'fading';
-        constellationFadeStart = performance.now();
-      }
-    }
-
-    if (constellationPhase === 'fading') {
-      var fadeElapsed = now - constellationFadeStart;
-      var fadeT = Math.min(fadeElapsed / CONSTELLATION_FADE, 1);
-      constellationAlpha = (1 - fadeT) * scrollFade;
-
-      // Fade in the real h1 text
-      var heroTitle = document.getElementById('heroTitle');
-      if (heroTitle) {
-        heroTitle.style.opacity = fadeT;
-        heroTitle.style.visibility = 'visible';
-      }
-
-      if (fadeT >= 1) {
-        constellationPhase = 'text';
-      }
-    }
   }
 
   /* ─── End Constellation Name System ─── */
