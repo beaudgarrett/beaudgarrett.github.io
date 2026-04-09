@@ -53,23 +53,45 @@
     var heroTitle = document.getElementById('heroTitle');
     if (!heroTitle) return;
 
+    // Element has visibility:hidden but still occupies layout — rect is accurate
     var rect = heroTitle.getBoundingClientRect();
+    var cs = window.getComputedStyle(heroTitle);
 
-    // Create offscreen canvas to sample text shape
+    // Read the exact computed font properties from the element
+    var fontSizePx = parseFloat(cs.fontSize);
+    var fontWeight = cs.fontWeight;
+    var fontFamily = cs.fontFamily;
+    var letterSpacing = parseFloat(cs.letterSpacing) || 0;
+    var lineHeightPx = parseFloat(cs.lineHeight);
+    if (isNaN(lineHeightPx)) lineHeightPx = fontSizePx * 0.95;
+
+    // Create offscreen canvas at the element's exact CSS pixel dimensions
     var offCanvas = document.createElement('canvas');
     var offCtx = offCanvas.getContext('2d');
-    var ow = 600;
-    var oh = 200;
+    var ow = Math.ceil(rect.width);
+    var oh = Math.ceil(rect.height);
     offCanvas.width = ow;
     offCanvas.height = oh;
 
+    // Render text with the same font so the shape matches exactly
     offCtx.fillStyle = 'white';
-    offCtx.font = 'bold 72px Inter, system-ui, sans-serif';
-    offCtx.textAlign = 'left';
+    offCtx.font = fontWeight + ' ' + fontSizePx + 'px ' + fontFamily;
     offCtx.textBaseline = 'top';
-    offCtx.fillText('BEAU', 10, 10);
-    offCtx.fillText('GARRETT', 10, 100);
 
+    // Match the actual text: "Beau<br>Garrett" — render each line
+    // Canvas doesn't support letter-spacing, so draw char by char
+    var lines = ['Beau', 'Garrett'];
+    for (var l = 0; l < lines.length; l++) {
+      var line = lines[l];
+      var y = l * lineHeightPx;
+      var x = 0;
+      for (var c = 0; c < line.length; c++) {
+        offCtx.fillText(line[c], x, y);
+        x += offCtx.measureText(line[c]).width + letterSpacing;
+      }
+    }
+
+    // Sample pixel positions from the rendered text shape
     var imageData = offCtx.getImageData(0, 0, ow, oh);
     var textPoints = [];
     var step = 4;
@@ -81,17 +103,6 @@
         }
       }
     }
-
-    // Find the actual bounding box of rendered text pixels
-    var minPx = ow, maxPx = 0, minPy = oh, maxPy = 0;
-    for (var bi = 0; bi < textPoints.length; bi++) {
-      if (textPoints[bi].x < minPx) minPx = textPoints[bi].x;
-      if (textPoints[bi].x > maxPx) maxPx = textPoints[bi].x;
-      if (textPoints[bi].y < minPy) minPy = textPoints[bi].y;
-      if (textPoints[bi].y > maxPy) maxPy = textPoints[bi].y;
-    }
-    var pxW = maxPx - minPx || 1;
-    var pxH = maxPy - minPy || 1;
 
     // Sample ~130 star positions from the text
     var numStars = Math.min(130, textPoints.length);
@@ -107,15 +118,13 @@
     nameStars = [];
     for (var ni = 0; ni < shuffled.length; ni++) {
       var pt = shuffled[ni];
-      // Map text pixel bounding box directly onto the h1 element rect
-      var tx = rect.left - 20 + ((pt.x - minPx) / pxW) * rect.width * 0.8;
-      var ty = rect.top - 15 + ((pt.y - minPy) / pxH) * rect.height * 0.85;
+      // Direct 1:1 mapping — canvas is sized to element, so coords match exactly
+      var tx = rect.left + pt.x;
+      var ty = rect.top + pt.y;
 
       nameStars.push({
-        // Start scattered randomly across viewport
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        // Target position (viewport coords)
         targetX: tx,
         targetY: ty,
         r: Math.random() * 1.2 + 0.6,
