@@ -54,11 +54,6 @@
     if (!heroTitle) return;
 
     var rect = heroTitle.getBoundingClientRect();
-    // Use the hero title position to place our constellation
-    var centerX = rect.left + rect.width / 2;
-    var centerY = rect.top + rect.height / 2;
-    var textWidth = rect.width;
-    var textHeight = rect.height;
 
     // Create offscreen canvas to sample text shape
     var offCanvas = document.createElement('canvas');
@@ -87,6 +82,17 @@
       }
     }
 
+    // Find the actual bounding box of rendered text pixels
+    var minPx = ow, maxPx = 0, minPy = oh, maxPy = 0;
+    for (var bi = 0; bi < textPoints.length; bi++) {
+      if (textPoints[bi].x < minPx) minPx = textPoints[bi].x;
+      if (textPoints[bi].x > maxPx) maxPx = textPoints[bi].x;
+      if (textPoints[bi].y < minPy) minPy = textPoints[bi].y;
+      if (textPoints[bi].y > maxPy) maxPy = textPoints[bi].y;
+    }
+    var pxW = maxPx - minPx || 1;
+    var pxH = maxPy - minPy || 1;
+
     // Sample ~130 star positions from the text
     var numStars = Math.min(130, textPoints.length);
     var shuffled = textPoints.slice();
@@ -101,9 +107,9 @@
     nameStars = [];
     for (var ni = 0; ni < shuffled.length; ni++) {
       var pt = shuffled[ni];
-      // Map offscreen coords to viewport coords centered on hero title
-      var tx = centerX + (pt.x / ow - 0.5) * textWidth * 1.1;
-      var ty = centerY + (pt.y / oh - 0.5) * textHeight * 1.15;
+      // Map text pixel bounding box directly onto the h1 element rect
+      var tx = rect.left + ((pt.x - minPx) / pxW) * rect.width;
+      var ty = rect.top + ((pt.y - minPy) / pxH) * rect.height;
 
       nameStars.push({
         // Start scattered randomly across viewport
