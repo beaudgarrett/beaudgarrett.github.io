@@ -9,7 +9,7 @@ interface TextRevealProps {
 
 export default function TextReveal({ children, className = '', delay = 0 }: TextRevealProps) {
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden -mb-4">
       <motion.div
         initial={{ y: '100%', rotate: 2 }}
         whileInView={{ y: 0, rotate: 0 }}
@@ -19,7 +19,7 @@ export default function TextReveal({ children, className = '', delay = 0 }: Text
           delay,
           ease: [0.23, 1, 0.32, 1],
         }}
-        className={className}
+        className={`pb-4 ${className}`}
       >
         {children}
       </motion.div>
