@@ -1,6 +1,37 @@
+# OS
 .DS_Store
+
+# Editor / local tooling
+.claude/
+.bgcli/
+.pytest_cache/
+.ruff_cache/
+
+# Local logs
+logs/
+
+# Python local envs / projects (not part of deployed site)
 celestiml/
 echo_runner/
 gAIn/
 venv/
 __pycache__/
+
+# Sibling projects (kept local, not part of the deployed portfolio)
+OriginEngine/
+ai-data-quality-monitor/
+ai-security-operations-copilot/
+bgCLI/
+forgetry/
+prototypeBetterWebsite/
+websiteprototype2/
+websiteprototype2.zip
+portfolio assets:projects/
+portfolio assets:projects.zip
+portfolio_pdfs/
+
+# Modern-portfolio: track source, ignore build + dev artifacts
+modern-portfolio/node_modules/
+modern-portfolio/dist/
+modern-portfolio/v*.png
+modern-portfolio/Launch Portfolio.command
