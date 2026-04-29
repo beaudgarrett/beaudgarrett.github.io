@@ -9,12 +9,12 @@ import ParallaxImage from './ParallaxImage';
 
 const projects = [
   {
-    id: 'bgcli',
-    name: 'bgCLI',
+    id: 'beaucli',
+    name: 'BeauCLI',
     tagline: 'AI Coding Harness',
     description:
-      'Principal-grade terminal coding harness with multi-agent orchestration, AST-based code indexing, SQLite-backed symbol search, and local MoE routing. Migrated from Python to Rust for memory-safe async execution.',
-    image: '/images/bgCLI.png',
+      'Multi-agent terminal coding harness with AST-based code indexing, SQLite-backed symbol search, and local mixture-of-experts routing. Built in Rust for memory-safe async execution. Scored 79.2 on TermBench, placing it in the top 5 worldwide.',
+    image: '/images/beaucli.png',
     icon: Terminal,
     size: 'large',
     glowColor: 'rgba(52, 211, 153, 0.1)',
@@ -23,7 +23,7 @@ const projects = [
     accentColor: 'text-emerald-400',
     tech: ['Rust', 'Python', 'SQLite', 'Tokio', 'OpenAI API'],
     github: 'https://github.com/beaudgarrett/bgCLI',
-    stats: '5-layer architecture',
+    stats: '79.2 TermBench • Top 5 worldwide',
   },
   {
     id: 'celestiml',
